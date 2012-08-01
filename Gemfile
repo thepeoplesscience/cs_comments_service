@@ -27,8 +27,8 @@ gem 'delayed_job'
 gem 'delayed_job_mongoid'
 
 gem 'mongoid-tree', :git => 'git@github.com:dementrock/mongoid-tree.git', :branch => "mongoid-2.0"
-gem 'voteable_mongo', :git => 'git@github.com:dementrock/voteable_mongo.git'
-gem 'mongoid_taggable', :git => 'git@github.com:dementrock/mongoid_taggable.git'
+gem 'voteable_mongo', :git => 'git@github.com:dementrock/voteable_mongo.git', :branch => "mongoid-2.0"
+gem 'mongoid_taggable', :git => 'git@github.com:dementrock/mongoid_taggable.git', :branch => "mongoid-2.0"
 
 gem 'sunspot'
 gem 'sunspot_solr'
