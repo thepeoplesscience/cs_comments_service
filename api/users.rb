@@ -48,7 +48,12 @@ put "#{APIPREFIX}/users/:user_id" do |user_id|
   if not user
     user = User.new(external_id: user_id)
   end
-  user.update_attributes(params.slice(*%w[username email default_sort_key]))
+  user.update_attributes(params.slice(*%w[username email created_at updated_at default_sort_key]))
+  if params["config"] and params["course_id"]
+    profile = user.profiles.find_or_create_by(course_id: params["course_id"])
+    profile.config = profile.config.with_indifferent_access.merge(params["config"])
+    profile.save
+  end
   if user.errors.any?
     error 400, user.errors.full_messages.to_json
   else

@@ -7,6 +7,13 @@ class AtUserObserver < Mongoid::Observer
     self.class.delay.process_at_notifications(content)
   end
 
+  def after_update(content)
+    attrs = content.changed_attributes
+    if attrs.include?(:title) or attrs.include?(:body)
+      self.class.delay.process_at_notifications(content)
+    end
+  end
+
   def self.process_at_notifications(content)
     text = content.body
 
@@ -37,6 +44,8 @@ class AtUserObserver < Mongoid::Observer
 
       notification = Notification.new(
         notification_type: "at_user",
+        course_id: content.course_id,
+        happened_at: content.updated_at,
         info: {
           comment_id: (content.id if content_type == :comment),
           content_type: content_type,

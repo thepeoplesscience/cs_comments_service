@@ -43,8 +43,9 @@ gem 'dalli'
 
 gem 'rest-client'
 
+gem 'actionmailer'
+
 group :test do
   gem 'rspec'
   gem 'rack-test', :require => "rack/test"
 end
-

@@ -8,7 +8,7 @@ class PostReplyObserver < Mongoid::Observer
   def self.generate_activity_and_notifications(comment)
 
     activity = Activity.new
-    activity.happend_at = comment.created_at
+    activity.happened_at = comment.created_at
     activity.anonymous = comment.anonymous
     activity.actor = comment.author
     activity.target = comment.comment_thread
@@ -18,6 +18,8 @@ class PostReplyObserver < Mongoid::Observer
     if comment.comment_thread.subscribers or (comment.author.followers if not comment.anonymous)
       notification = Notification.new(
         notification_type: "post_reply",
+        course_id: comment.course_id,
+        happened_at: comment.created_at,
         info: {
           thread_id: comment.comment_thread.id,
           thread_title: comment.comment_thread.title,

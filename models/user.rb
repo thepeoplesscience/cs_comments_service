@@ -1,17 +1,20 @@
 class User
   include Mongoid::Document
   include Mongo::Voter
+  include Mongoid::Timestamps
 
   field :_id, type: String, default: -> { external_id }
   field :external_id, type: String
   field :username, type: String
   field :email, type: String
   field :default_sort_key, type: String, default: "date"
+  field :config, type: Hash, default: {}
 
+  embeds_many :profiles, class_name: "UserProfile"
   has_many :comments, inverse_of: :author
   has_many :comment_threads, inverse_of: :author
   has_many :activities, class_name: "Notification", inverse_of: :actor
-  has_and_belongs_to_many :notifications, inverse_of: :receivers
+  has_and_belongs_to_many :notifications, inverse_of: :receivers, autosave: true
 
   validates_presence_of :external_id
   validates_presence_of :username
@@ -100,4 +103,13 @@ class User
     subscription
   end
 
+end
+
+class UserProfile
+  include Mongoid::Document
+  field :course_id, type: String
+  field :config, type: Hash, default: {}
+  embedded_in :user
+
+  validates :course_id, uniqueness: true, presence: true
 end
