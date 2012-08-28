@@ -27,10 +27,11 @@ class PostTopicObserver < Mongoid::Observer
           actor_id: comment_thread.author_with_anonymity(:id),
         },
       )
-      receivers = (comment_thread.commentable.subscribers + comment_thread.author_with_anonymity(:followers, [])).uniq_by(&:id)
+      receivers = (comment_thread.commentable.subscribers + comment_thread.course.subscribers + comment_thread.author_with_anonymity(:followers, [])).uniq_by(&:id)
       receivers.delete(comment_thread.author)
       notification.receivers << receivers
       notification.save!
+      notification.send_real_time_notification
     end
   end
 end

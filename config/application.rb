@@ -39,27 +39,10 @@ Dir[dirname + '/../models/*/*.rb'].each {|file| require file}
 Mongoid.observers = PostReplyObserver, PostTopicObserver, AtUserObserver
 Mongoid.instantiate_observers
 
+config = (CommentService.config[:callback] || {})[:notifications] || {}
+NotificationCallback.api_key = CommentService.config[:api_key]
+NotificationCallback.load_config(config)
+
 APIPREFIX = CommentService::API_PREFIX
 DEFAULT_PAGE = 1
 DEFAULT_PER_PAGE = 20
-
-require 'action_mailer'
-
-ActionMailer::Base.view_paths = [File.dirname(__FILE__) + '/../templates/mailer']
-
-ActionMailer::Base.delivery_method = :test
-ActionMailer::Base.perform_deliveries = false
-ActionMailer::Base.raise_delivery_errors = true
-ActionMailer::Base.default :charset => "utf-8"
-
-email_config = YAML.load_file(File.dirname(__FILE__) + '/email.credentials.yml')
-
-ActionMailer::Base.smtp_settings = {
-  address: "smtp.gmail.com",
-  port: 587,
-  domain: "localhost:4567",
-  authentication: "plain",
-  enable_starttls_auto: true,
-  user_name: email_config["username"],
-  password: email_config["password"],
-}

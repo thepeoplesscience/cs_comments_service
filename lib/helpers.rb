@@ -22,10 +22,12 @@ helpers do
       User.find_by(external_id: params["source_id"])
     when "thread"
       CommentThread.find(params["source_id"])
-    when "other"
+    when "course"
+      Course.find(params["source_id"])
+    when "commentable"
       Commentable.find(params["source_id"])
     else
-      raise ArgumentError, "Source type must be 'user', 'thread' or 'other'"
+      raise ArgumentError, "Source type must be 'user', 'thread', 'course', or 'commentable'"
     end
   end
 

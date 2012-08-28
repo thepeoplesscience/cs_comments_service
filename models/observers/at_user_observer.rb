@@ -60,6 +60,7 @@ class AtUserObserver < Mongoid::Observer
       receivers.delete(content.author)
       notification.receivers << receivers
       notification.save!
+      notification.send_real_time_notification
     end
   end
 

@@ -137,6 +137,10 @@ class CommentThread < Content
     Commentable.find(commentable_id)
   end
 
+  def course
+    Course.find(course_id)
+  end
+
   def subscriptions
     Subscription.where(source_id: id.to_s, source_type: self.class.to_s)
   end

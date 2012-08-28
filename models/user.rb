@@ -45,6 +45,10 @@ class User
     subscriptions_as_subscriber.where(source_type: "User").map(&:source_id)
   end
 
+  def subscribed_course_ids
+    subscriptions_as_subscriber.where(source_type: "Course").map(&:source_id)
+  end
+
   def subscribed_threads
     subscribed_thread_ids.map {|id| CommentThread.find(id)}
   end
@@ -57,12 +61,17 @@ class User
     subscribed_user_ids.map {|id| User.find(id)}
   end
 
+  def subscribed_courses
+    subscribed_course_ids.map {|id| Course.find(id)}
+  end
+
   def to_hash(params={})
     hash = as_document.slice(*%w[username external_id])
     if params[:complete]
       hash = hash.merge("subscribed_thread_ids" => subscribed_thread_ids,
                         "subscribed_commentable_ids" => subscribed_commentable_ids,
                         "subscribed_user_ids" => subscribed_user_ids,
+                        "subscribed_course_ids" => subscribed_course_ids,
                         "follower_ids" => subscriptions_as_source.map(&:subscriber_id),
                         "id" => id,
                         "upvoted_ids" => upvoted_ids,

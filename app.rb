@@ -34,8 +34,17 @@ Dir[File.dirname(__FILE__) + '/lib/**/*.rb'].each {|file| require file}
 Dir[File.dirname(__FILE__) + '/models/*.rb'].each {|file| require file}
 Dir[File.dirname(__FILE__) + '/models/**/*.rb'].each {|file| require file}
 
-Mongoid.observers = PostReplyObserver, PostTopicObserver, AtUserObserver
+Mongoid.observers = [
+  PostReplyObserver,
+  PostTopicObserver,
+  AtUserObserver, 
+]
+
 Mongoid.instantiate_observers
+
+config = (CommentService.config[:callback] || {})[:notifications] || {}
+NotificationCallback.api_key = CommentService.config[:api_key]
+NotificationCallback.load_config(config)
 
 APIPREFIX = CommentService::API_PREFIX
 DEFAULT_PAGE = 1

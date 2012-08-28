@@ -181,6 +181,11 @@ namespace :db do
     #   other_user = users.select{|u| u != user}.sample
     #   user.subscribe(other_user)
     # end
+
+    profile = users.first.profiles.create(course_id: COURSE_ID)
+    profile.config[:email_digest] = :real_time
+    profile.save!
+    users.first.subscribe(Course.find(COURSE_ID))
     generate_comments_for("video_1")
     generate_comments_for("lab_1")
     generate_comments_for("lab_2")

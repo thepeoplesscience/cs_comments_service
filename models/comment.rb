@@ -36,6 +36,10 @@ class Comment < Content
     nodes.map{|node, sub_nodes| node.to_hash.merge("children" => hash_tree(sub_nodes).compact)}
   end
 
+  def course
+    Course.find(course_id)
+  end
+
   def to_hash(params={})
     sort_by_parent_and_time = Proc.new do |x, y|
       arr_cmp = x.parent_ids.map(&:to_s) <=> y.parent_ids.map(&:to_s)
