@@ -6,9 +6,8 @@ class Notification
   field :happened_at, type: Time
   field :course_id, type: String
   field :info, type: Hash
-  field :unread, type: Boolean, default: true
 
-  attr_accessible :notification_type, :info, :course_id, :happened_at, :unread
+  attr_accessible :notification_type, :info, :course_id, :happened_at
 
   validates_presence_of :notification_type
   validates_presence_of :info
@@ -20,7 +19,7 @@ class Notification
   has_and_belongs_to_many :receivers, class_name: "User", inverse_of: :notifications, autosave: true
 
   def to_hash(params={})
-    as_document.slice(*%w[notification_type info actor_id target_id course_id happened_at unread]).merge("id" => _id)
+    as_document.slice(*%w[notification_type info actor_id target_id course_id happened_at]).merge("id" => _id)
   end
 
   def send_real_time_notification
@@ -28,7 +27,6 @@ class Notification
                                "profiles.config.email_digest" => :real_time)
                         .map(&:id)
     NotificationCallback.send_callback course_id, user_ids, self
-    self.update(unread: false)
   end
 
 end

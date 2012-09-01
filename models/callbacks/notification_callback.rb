@@ -15,7 +15,7 @@ class NotificationCallback
     end
 
     def send_callback(course_id, user_ids, notifications)
-      return unless @url and @should_send
+      return unless @url and @should_send and Array(user_ids).length > 0
       data = {
         api_key: @api_key,
         course_id: course_id,
