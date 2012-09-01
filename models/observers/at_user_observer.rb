@@ -15,7 +15,7 @@ class AtUserObserver < Mongoid::Observer
     end
   end
 
-  def self.process_at_notifications(prev_at_positions, current_at_positions)
+  def self.process_at_notifications(content, prev_at_positions, current_at_positions)
     content_type = content.class == CommentThread ? :thread : :comment
     prev_user_ids = prev_at_positions.map { |x| x[:user_id] }.to_set
     current_user_ids = current_at_positions.map { |x| x[:user_id] }.to_set
@@ -74,7 +74,6 @@ class AtUserObserver < Mongoid::Observer
       cnt += 1
       marked_text.call(at_positions_dict, cnt, $1)
     end
-    print content.marked_body
     content.save!
   end
 
@@ -86,7 +85,7 @@ class AtUserObserver < Mongoid::Observer
     at_positions = self.get_valid_at_position_list text 
     prev_at_positions = content.at_position_list
     self.process_marked_users(content, at_positions)
-    self.delay.process_at_notifications(prev_at_positions, at_positions)
+    self.delay.process_at_notifications(content, prev_at_positions, at_positions)
   end
 
 private
