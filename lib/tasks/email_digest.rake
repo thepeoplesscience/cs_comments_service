@@ -1,3 +1,7 @@
+require 'rubygems'
+require 'rufus/scheduler'
+require 'eventmachine'
+
 class NotificationDigest
 
   def initialize(user, profile)
@@ -10,6 +14,8 @@ class NotificationDigest
     case @config[:email_digest]
     when /^every_(\d+)_hours?$/i
       $1.to_i.hours
+    when /^every_(\d+)_seconds?$/i
+      $1.to_i.seconds
     when /^every_day$/i
       1.days
     else
@@ -49,5 +55,11 @@ class NotificationDigest
 end
 
 task :email_digest => :environment do
-  NotificationDigest.run
+  check_interval = CommentService.config[:email_digest_check_interval] || "10m"
+  EM.run do
+    scheduler = Rufus::Scheduler::EmScheduler.start_new
+    scheduler.every check_interval, blocking: true do
+      NotificationDigest.run
+    end
+  end
 end

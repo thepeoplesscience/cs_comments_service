@@ -43,7 +43,8 @@ gem 'dalli'
 
 gem 'rest-client'
 
-gem 'actionmailer'
+gem 'rufus-scheduler'
+gem 'eventmachine'
 
 group :test do
   gem 'rspec'
