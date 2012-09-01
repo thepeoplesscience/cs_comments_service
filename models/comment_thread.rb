@@ -13,7 +13,9 @@ class CommentThread < Content
 
   field :comment_count, type: Integer, default: 0
   field :title, type: String
+  field :marked_title, type: String
   field :body, type: String
+  field :marked_body, type: String
   field :course_id, type: String
   field :commentable_id, type: String
   field :anonymous, type: Boolean, default: false
@@ -150,7 +152,9 @@ class CommentThread < Content
   end
 
   def to_hash(params={})
-    doc = as_document.slice(*%w[title body course_id anonymous commentable_id created_at updated_at at_position_list closed])
+    doc = as_document.slice(*%w[title body course_id anonymous commentable_id
+                                created_at updated_at at_position_list closed
+                                marked_title marked_body])
                      .merge("id" => _id)
                      .merge("user_id" => author.id)
                      .merge("username" => author.username)

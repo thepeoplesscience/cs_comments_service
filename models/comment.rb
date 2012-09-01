@@ -11,6 +11,7 @@ class Comment < Content
 
   field :course_id, type: String
   field :body, type: String
+  field :marked_body, type: String
   field :endorsed, type: Boolean, default: false
   field :anonymous, type: Boolean, default: false
   field :at_position_list, type: Array, default: []
@@ -52,7 +53,8 @@ class Comment < Content
     if params[:recursive]
       self.class.hash_tree(subtree(sort: sort_by_parent_and_time)).first
     else
-      as_document.slice(*%w[body course_id endorsed anonymous created_at updated_at at_position_list])
+      as_document.slice(*%w[body course_id endorsed anonymous created_at
+                            updated_at at_position_list marked_body])
                  .merge("id" => _id)
                  .merge("user_id" => author.id)
                  .merge("username" => author.username)

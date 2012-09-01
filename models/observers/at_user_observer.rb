@@ -1,35 +1,26 @@
 require 'set'
 
+# TODO the whole code for processing '@' should be rewritten
 class AtUserObserver < Mongoid::Observer
   observe :comment, :comment_thread
 
   def after_create(content)
-    self.class.delay.process_at_notifications(content)
+    self.class.process_at_positions(content)
   end
 
   def after_update(content)
     attrs = content.changed_attributes
     if attrs.include?(:title) or attrs.include?(:body)
-      self.class.delay.process_at_notifications(content)
+      self.class.process_at_positions(content)
     end
   end
 
-  def self.process_at_notifications(content)
-    text = content.body
-
-    content_type = content.respond_to?(:title) ? :thread : :comment
-    text = content.title + "\n\n" + text if content_type == :thread
-
-    at_positions = self.get_valid_at_position_list text 
-    prev_at_positions = content.at_position_list
-
-    content.update_attributes!(at_position_list: at_positions)
-
+  def self.process_at_notifications(prev_at_positions, current_at_positions)
+    content_type = content.class == CommentThread ? :thread : :comment
     prev_user_ids = prev_at_positions.map { |x| x[:user_id] }.to_set
-    current_user_ids = at_positions.map { |x| x[:user_id] }.to_set
-
+    current_user_ids = current_at_positions.map { |x| x[:user_id] }.to_set
+    # only send notifications for newly mentioned usernames
     new_user_ids = current_user_ids - prev_user_ids
-
     if content_type == :thread
       thread_title = content.title
       thread_id = content.id
@@ -39,9 +30,7 @@ class AtUserObserver < Mongoid::Observer
       thread_id = content.comment_thread.id
       commentable_id = content.comment_thread.commentable_id
     end
-
     unless new_user_ids.empty?
-
       notification = Notification.new(
         notification_type: "at_user",
         course_id: content.course_id,
@@ -64,9 +53,45 @@ class AtUserObserver < Mongoid::Observer
     end
   end
 
+  def self.process_marked_users(content, at_positions)
+    content.at_position_list = at_positions
+    at_positions_dict = Hash[*at_positions.collect{|x| [x[:position], x]}.flatten]
+    cnt = -1
+    marked_text = lambda do |at_positions_dict, cnt, text|
+      if at_positions_dict[cnt]
+        "<span class='mentioned_user' user_id='#{at_positions_dict[cnt][:user_id]}'>#{$1}</span>"
+      else
+        $1
+      end
+    end
+    if content.respond_to? :title
+      content.marked_title = content.title.gsub AT_NOTIFICATION_REGEX do
+        cnt += 1
+        marked_text.call(at_positions_dict, cnt, $1)
+      end
+    end
+    content.marked_body = content.body.gsub AT_NOTIFICATION_REGEX do
+      cnt += 1
+      marked_text.call(at_positions_dict, cnt, $1)
+    end
+    print content.marked_body
+    content.save!
+  end
+
+  def self.process_at_positions(content)
+    content_type = content.class == CommentThread ? :thread : :comment
+    text = content.body
+    # we also process at notifications in titles
+    text = content.title + "\n\n" + text if content_type == :thread
+    at_positions = self.get_valid_at_position_list text 
+    prev_at_positions = content.at_position_list
+    self.process_marked_users(content, at_positions)
+    self.delay.process_at_notifications(prev_at_positions, at_positions)
+  end
+
 private
 
-  AT_NOTIFICATION_REGEX = /(?<=^|\s)(@[A-Za-z0-9_]+)(?!\w)/
+  AT_NOTIFICATION_REGEX = /(?<=^|\s|\W)(@[A-Za-z0-9_]+)(?!\w)/
 
   def self.get_marked_text(text)
     counter = -1
