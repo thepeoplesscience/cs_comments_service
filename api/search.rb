@@ -69,7 +69,7 @@ get "#{APIPREFIX}/search/threads/recent_active" do
   query_params["course_id"] = params["course_id"] if params["course_id"]
   query_params["commentable_id"] = params["commentable_id"] if params["commentable_id"]
 
-  comment_threads = if follower_id 
+  comment_threads = if follower_id
     User.find(follower_id).subscribed_threads.select do |thread|
       thread.last_activity_at >= from_time and \
       query_params.to_a.map {|query| thread[query.first] == query.last}.all?
@@ -78,7 +78,7 @@ get "#{APIPREFIX}/search/threads/recent_active" do
     CommentThread.all.where(query_params.merge(:last_activity_at => {:$gte => from_time}))
   end
 
-  comment_threads.to_a.sort {|x, y| y.last_activity_at <=> x.last_activity_at}[0..4].map(&:to_hash).to_json
+  comment_threads.order_by(:last_activity_at.desc).limit(5).to_a.map(&:to_hash).to_json
 end
 
 
