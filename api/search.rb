@@ -90,3 +90,42 @@ get "#{APIPREFIX}/search/tags/trending" do
                .sort_by {|x| - x.last}[0..4]
                .to_json
 end
+
+get "#{APIPREFIX}/search/commentables/:commentable_ids" do
+
+  sort_key_mapper = {
+      "date" => :created_at,
+      "activity" => :last_activity_at,
+      "votes" => :votes_point,
+      "comments" => :comment_count,
+  }
+
+  sort_order_mapper = {
+      "desc" => :desc,
+      "asc" => :asc,
+  }
+
+  sort_key = sort_key_mapper[params["sort_key"]]
+  sort_order = sort_order_mapper[params["sort_order"]]
+
+  sort_keyword_valid = (!params["sort_key"] && !params["sort_order"] || sort_key && sort_order)
+  if !params["commentable_ids"] || !sort_keyword_valid
+    {}.to_json
+  else
+    page = (params["page"] || DEFAULT_PAGE).to_i
+    per_page = (params["per_page"] || DEFAULT_PER_PAGE).to_i
+    # for multi commentable searching
+    commentable_ids = params["commentable_ids"].split(',')
+
+    to_skip = (page-1)*per_page
+    results = CommentThread.in(:commentable_id=>commentable_ids).skip(to_skip).limit(per_page)
+
+    num_pages = (results.size()/per_page.to_f).ceil
+    page = [num_pages, [1, page].max].min
+    {
+        collection: results.map{|t| t.to_hash(recursive: bool_recursive).to_json},
+        num_pages: num_pages,
+        page: page,
+    }.to_json
+  end
+end
