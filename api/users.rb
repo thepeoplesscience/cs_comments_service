@@ -43,17 +43,40 @@ get "#{APIPREFIX}/users/:user_id/active_threads" do |user_id|
   
 end
 
+put "#{APIPREFIX}/users/:user_id/course_preferences" do |user_id|
+  user = User.find_or_create_by(external_id: user_id)
+  course_preference = user.course_preferences.find_or_create_by(course_id: params["course_id"])
+  course_preference.preference = course_preference.preference.with_indifferent_access.merge(params["course_preferences"])
+  course_preference.save
+  if course_preference.errors.any?
+    error 400, course_preference.errors.full_messages.to_json
+  else
+    course_preference.to_hash.to_json
+  end
+end
+
+put "#{APIPREFIX}/users/:user_id/read_states" do |user_id|
+  user = User.find_or_create_by(external_id: user_id)
+  read_state = user.read_states.find_or_create_by(course_id: params["course_id"])
+  # support updating single thread data or bulk update
+  if params["last_read_time"] and params["thread_id"]
+    read_state.last_read_time = read_state.last_read_time.with_indifferent_access.merge({
+      params["thread_id"] => params["last_read_time"]
+    })
+  elsif params["read_states"]
+    read_state.last_read_time = read_state.last_read_time.with_indifferent_access.merge(params["read_states"])
+  end
+  read_state.save
+  if read_state.errors.any?
+    error 400, read_state.errors.full_messages.to_json
+  else
+    read_state.to_hash.to_json
+  end
+end
+
 put "#{APIPREFIX}/users/:user_id" do |user_id|
-  user = User.where(external_id: user_id).first
-  if not user
-    user = User.new(external_id: user_id)
-  end
+  user = User.find_or_create_by(external_id: user_id)
   user.update_attributes(params.slice(*%w[username email created_at updated_at default_sort_key]))
-  if params["config"] and params["course_id"]
-    profile = user.profiles.find_or_create_by(course_id: params["course_id"])
-    profile.config = profile.config.with_indifferent_access.merge(params["config"])
-    profile.save
-  end
   if user.errors.any?
     error 400, user.errors.full_messages.to_json
   else

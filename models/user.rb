@@ -10,7 +10,8 @@ class User
   field :default_sort_key, type: String, default: "date"
   field :config, type: Hash, default: {}
 
-  embeds_many :profiles, class_name: "UserProfile"
+  embeds_many :course_preferences
+  embeds_many :read_states
   has_many :comments, inverse_of: :author
   has_many :comment_threads, inverse_of: :author
   has_many :activities, class_name: "Notification", inverse_of: :actor
@@ -114,11 +115,28 @@ class User
 
 end
 
-class UserProfile
+class CoursePreference
   include Mongoid::Document
   field :course_id, type: String
-  field :config, type: Hash, default: {}
+  field :preference, type: Hash, default: {}
   embedded_in :user
 
   validates :course_id, uniqueness: true, presence: true
+
+  def to_hash
+    to_json
+  end
+end
+
+class ReadState
+  include Mongoid::Document
+  field :course_id, type: String
+  field :last_read_time, type: Hash, default: {}
+  embedded_in :user
+
+  validates :course_id, uniqueness: true, presence: true
+  
+  def to_hash
+    to_json
+  end
 end
