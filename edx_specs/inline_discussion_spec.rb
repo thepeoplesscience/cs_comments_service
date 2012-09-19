@@ -32,7 +32,7 @@ describe "Inline", :type => :request do
 
     perform_steps "posting a thread"
 
-    #perform_steps "showing a newly created thread"
+    perform_steps "showing a newly created thread"
 
     it "should navigate back to a courseware content" do
       goto_course "BerkeleyX/CS188/fa12"
