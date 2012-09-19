@@ -29,3 +29,29 @@ def generate_post
   post[:title] = "#{Faker::Lorem.sentence(5)} (#{post[:hash]})"
   post
 end
+
+def content_element(container)
+  container.extend ContentElement
+end
+
+module ContentElement
+  def vote_button
+    self.find('a.vote-btn')
+  end
+
+  def vote_count
+    vote_button.find('.votes-count-number').text
+  end
+
+  def edit_button
+    self.find('a.action-edit')
+  end
+
+  def delete_button
+    self.find('a.action-delete')
+  end
+
+  def responses
+    self.all('.responses > li')
+  end
+end

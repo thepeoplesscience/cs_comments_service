@@ -85,10 +85,27 @@ describe "Discussion", :type => :request do
     end
 
     it "should let you vote on a post" do
-      vote_btn = page.find('article.discussion-article .thread-content-wrapper a.vote-btn')
-      vote_btn.find('.votes-count-number').should have_content '0'
-      vote_btn.click
-      vote_btn.find('.votes-count-number').should have_content '1'
+      post = content_element(page.find('article.discussion-article .thread-content-wrapper'))
+      post.vote_count.should == '0'
+      post.vote_button.click
+      post.vote_count.should == '1'
+      post.vote_button.click
+      post.vote_count.should == '0'
+    end
+
+    it "should let you vote on a response" do
+      first_response = content_element(page.find('.responses li:first'))
+      first_response.vote_count.should == '0'
+      first_response.vote_button.click
+      first_response.vote_count.should == '1'
+    end
+
+    it "should let you delete your own response" do
+      thread = content_element(page.find('article.discussion-article'))
+      response_count = thread.responses.length
+      first_response = content_element(page.find('.responses li:first'))
+      first_response.delete_button.click
+      thread.responses.length.should == response_count - 1
     end
   end
 
