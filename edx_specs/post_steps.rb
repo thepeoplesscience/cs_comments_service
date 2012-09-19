@@ -12,17 +12,14 @@ shared_steps "posting a thread" do
   it "should let you create a new post" do
     click_link 'New Post'
     new_post_container = page.find('.new-post-article')
-    old_first_thread_title = page.find('.post-list .list-item:first .title').text
+    old_first_thread_title = page.find('.post-list .list-item:first .title, section.threads .discussion-article:first header h3').text
     new_post_container.should be_visible
     fill_in_wmd_body(new_post_container, thread_data[:body])
     new_post_container.find('.new-post-title').set(thread_data[:title])
     click_button "Add post"
-    new_first_thread_list_item = page.find('.post-list .list-item:first')
-    new_first_thread_list_item.should have_content (thread_data[:title])
-    new_first_thread_list_item.should_not have_content old_first_thread_title
 
     thread_container = page.find('article.discussion-article .thread-content-wrapper')
-    thread_container.should have_content thread_data[:body]
+    thread_container.should have_content thread_data[:body][0..140] #This is just so that the same thing works inline
     thread_container.should have_content thread_data[:title]
     thread_data[:id] = page.find('article.discussion-article')['data-id']
   end
@@ -121,6 +118,8 @@ shared_steps "deleting" do
   it "should let you delete your own thread" do
     thread = content_element(page.find('article.discussion-article .thread-content-wrapper'))
     thread.delete_button.click
+    wait_for_ajax
+    page.should_not have_content(thread_data[:title])
     page.should_not have_content(thread_data[:body])
   end
 end

@@ -23,6 +23,11 @@ describe "Discussion", :type => :request do
 
     perform_steps "posting a thread"
 
+    it "should show the new post at the top of the thread list" do
+      new_first_thread_list_item = page.find('.post-list .list-item:first')
+      new_first_thread_list_item.should have_content (thread_data[:title])
+    end
+
     perform_steps "showing a newly created thread"
 
     perform_steps "responding to a thread"
