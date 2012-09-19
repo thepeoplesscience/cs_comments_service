@@ -1,0 +1,8 @@
+# A sample Guardfile
+# More info at https://github.com/guard/guard#readme
+
+guard 'rspec', :version => 2 , :spec_paths=>".", :cli=>"--color" do
+  watch(%r{^.+_spec\.rb$})
+  watch('spec_helper.rb')  { "spec" }
+end
+
