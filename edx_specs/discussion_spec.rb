@@ -75,7 +75,7 @@ describe "Discussion", :type => :request do
     end
 
     it "should let you post a comment on a response" do
-      comment = "Help! I've been hacked to produce spam!"
+      comment = "Help! I've been hacked by a spambot!"
       first_response = page.find('.responses li:first')
       first_response.find('.wmd-input').click
       fill_in_wmd_body(first_response, comment)
@@ -100,12 +100,38 @@ describe "Discussion", :type => :request do
       first_response.vote_count.should == '1'
     end
 
+    it "should let you edit your own thread" do
+      thread = content_element(page.find('article.discussion-article'))
+      thread.edit_button.click
+      new_body = 'Latin is lame'
+      thread.fill_in_wmd_body(new_body)
+      thread.submit_button.click
+      thread.should_not have_selector('.edit-post-form')
+      thread.body.should have_content new_body
+    end
+
+    it "should let you edit your own response" do
+      first_response = content_element(page.find('.responses li:first'))
+      first_response.edit_button.click
+      new_body = 'Sorry for the spam, I was hacked.'
+      first_response.fill_in_wmd_body(new_body)
+      first_response.submit_button.click
+      first_response.should_not have_selector('.edit-response-form')
+      first_response.body.should have_content new_body
+    end
+
     it "should let you delete your own response" do
       thread = content_element(page.find('article.discussion-article'))
       response_count = thread.responses.length
       first_response = content_element(page.find('.responses li:first'))
       first_response.delete_button.click
       thread.responses.length.should == response_count - 1
+    end
+
+    it "should let you delete your own thread" do
+      thread = content_element(page.find('article.discussion-article .thread-content-wrapper'))
+      thread.delete_button.click
+      page.should_not have_content(thread_data[:body])
     end
   end
 

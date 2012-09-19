@@ -54,4 +54,16 @@ module ContentElement
   def responses
     self.all('.responses > li')
   end
+
+  def fill_in_wmd_body(body)
+    self.find("textarea.wmd-input").set(body)
+  end
+
+  def submit_button
+    self.find('input[type=submit]')
+  end
+
+  def body
+    self.find('.post-body,.response-body')
+  end
 end
