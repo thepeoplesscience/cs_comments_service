@@ -56,11 +56,11 @@ describe "Inline", :type => :request do
 
     perform_steps "editing"
 
-    it "should be at the courseware page" do
-      current_path.index('courseware').should_not be_nil
-      current_path.index('forum').should be_nil
-    end
-
     perform_steps "deleting"
+
+    it "should still be at the courseware page" do
+      current_path.include?('courseware').should be_true
+      current_path.include?('forum').should be_false
+    end
   end
 end
