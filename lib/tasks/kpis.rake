@@ -154,4 +154,39 @@ namespace :kpis do
       puts "\n\n\n"
     end
   end
+  
+task :velocity => :environment do
+    #USAGE
+    #SINATRA_ENV=development rake kpis:velocity
+    #or
+    #SINATRA_ENV=development bundle exec rake kpis:velocity
+
+    courses = Content.all.distinct("course_id")
+    puts "\n\n****************************************************"
+    puts "thread reply velocity per course on edX (#{Date.today})      "
+    puts "****************************************************\n\n"
+
+    courses.each do |c|
+      #first, get all the threads with replies
+      parents = Content.where({"course_id" => c, "_type" => "CommentThread", "comment_count" => {'$gt' => 0}})
+      
+      #now for each thread, 
+
+      total_time = 0
+      
+      parents.each do |p|
+        thread_time = p.created_at
+        first_comment_time = p.comments.first.created_at
+        total_time += (first_comment_time - thread_time)
+      end
+      
+      average_response_time = total_time / parents.count.to_f
+      puts c
+      puts "Average Response Time: #{(average_response_time/60).round(2)} minutes, #{(average_response_time%60).round(2)} seconds"
+      
+      puts "\n\n\n"
+    end
+  end  
+  
+  
 end
