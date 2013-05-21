@@ -226,11 +226,15 @@ namespace :db do
   task :reindex_search => :environment do
     Mongoid.identity_map_enabled = false
 
+    start_time = Time.now
+
     klass = CommentThread
     ENV['CLASS'] = klass.name
     ENV['INDEX'] = new_index = klass.tire.index.name << '_' << Time.now.strftime('%Y%m%d%H%M%S')
 
     Rake::Task["tire:import"].invoke
+
+    #now import only threads that have changed since start_time
 
     puts '[IMPORT] about to swap index'
     if a = Tire::Alias.find(klass.tire.index.name)

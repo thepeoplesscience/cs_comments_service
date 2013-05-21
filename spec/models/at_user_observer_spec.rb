@@ -1,5 +1,9 @@
 require 'spec_helper'
 
+Mongoid.observers = PostReplyObserver, PostTopicObserver, AtUserObserver
+Mongoid.instantiate_observers
+
+
 describe AtUserObserver do
   before :each do
     @text =
