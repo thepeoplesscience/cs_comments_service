@@ -6,6 +6,8 @@ class CommentThread < Content
   include Mongoid::Timestamps
   include Mongoid::TaggableWithContext
   include Mongoid::TaggableWithContext::AggregationStrategy::RealTime
+  include Tire::Model::Search
+  include Tire::Model::Callbacks
 
   taggable separator: ',', default: []
 
@@ -26,8 +28,11 @@ class CommentThread < Content
 
   index({author_id: 1, course_id: 1})
 
-  include Tire::Model::Search
-  include Tire::Model::Callbacks
+  after_touch :update_tire
+
+  belongs_to :author, class_name: "User", inverse_of: :comment_threads, index: true#, autosave: true
+  has_many :comments, dependent: :destroy#, autosave: true# Use destroy to envoke callback on the top-level comments TODO async
+  has_many :activities, autosave: true
 
   mapping do
     indexes :title, type: :string, analyzer: :snowball, boost: 5.0, stored: true, term_vector: :with_positions_offsets
@@ -45,12 +50,13 @@ class CommentThread < Content
     indexes :commentable_id, type: :string, index: :not_analyzed, included_in_all: false
     indexes :author_id, type: :string, as: 'author_id', index: :not_analyzed, included_in_all: false
     indexes :group_id, type: :integer, as: 'group_id', index: :not_analyzed, included_in_all: false
+    indexes :comments do
+      indexes :body, :type => 'string', :analyzer => 'snowball'
+    end
+    #indexes :comments, :as => comments.map{|c| c.body}.join('|'), :analyzer => 'snowball'
+
     #indexes :pinned, type: :boolean, as: 'pinned', index: :not_analyzed, included_in_all: false
   end
-
-  belongs_to :author, class_name: "User", inverse_of: :comment_threads, index: true#, autosave: true
-  has_many :comments, dependent: :destroy#, autosave: true# Use destroy to envoke callback on the top-level comments TODO async
-  has_many :activities, autosave: true
 
   attr_accessible :title, :body, :course_id, :commentable_id, :anonymous, :anonymous_to_peers, :closed
 
@@ -232,6 +238,10 @@ class CommentThread < Content
     #so that we can use the comment thread id as a common attribute for flagging
     self.id
   end  
+
+  def update_tire
+    tire.update_index
+  end
   
 private
 

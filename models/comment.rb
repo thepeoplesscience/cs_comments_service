@@ -18,7 +18,7 @@ class Comment < Content
 
   index({author_id: 1, course_id: 1})
 
-  belongs_to :comment_thread, index: true
+  belongs_to :comment_thread, index: true, touch:true
   belongs_to :author, class_name: "User", index: true
 
   attr_accessible :body, :course_id, :anonymous, :anonymous_to_peers, :endorsed
@@ -34,6 +34,7 @@ class Comment < Content
 
   before_create :set_thread_last_activity_at
   before_update :set_thread_last_activity_at
+  #after_save :update_tire
 
   def self.hash_tree(nodes)
     nodes.map{|node, sub_nodes| node.to_hash.merge("children" => hash_tree(sub_nodes).compact)}
@@ -101,6 +102,17 @@ private
 
   def set_thread_last_activity_at
     self.comment_thread.update_attributes!(last_activity_at: Time.now.utc)
+  end
+
+  def update_tire
+    #since the thread should hit off the comment's text, update the threads index, which 
+    #will force a pick up of the new or updated comment's body
+    t = self.comment_thread
+    if t
+      puts "**** UPDATING THREAD"
+      t.touch
+      t.update_tire
+    end
   end
 
 end
