@@ -98,21 +98,26 @@ class Comment < Content
       end
     end
   end
+
+def update_tire
+    #since the thread should hit off the comment's text, update the threads index, which 
+    #will force a pick up of the new or updated comment's body
+    t = self.comment_thread
+    if t
+      puts "**** UPDATING THREAD"
+      t.comments_text_dummy = t.comments.map{|c| c.body}.join{"|"}
+      t.save
+      t.update_tire
+    end
+  end
+
+
 private
 
   def set_thread_last_activity_at
     self.comment_thread.update_attributes!(last_activity_at: Time.now.utc)
   end
 
-  def update_tire
-    #since the thread should hit off the comment's text, update the threads index, which 
-    #will force a pick up of the new or updated comment's body
-    t = self.comment_thread
-    if t
-      puts "**** UPDATING THREAD"
-      t.touch
-      t.update_tire
-    end
-  end
+  
 
 end

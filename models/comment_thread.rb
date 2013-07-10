@@ -26,9 +26,11 @@ class CommentThread < Content
   field :group_id, type: Integer
   field :pinned, type: Boolean
 
+  field :comments_text_dummy, type: String
+
   index({author_id: 1, course_id: 1})
 
-  after_touch :update_tire
+  #after_touch :update_tire
 
   belongs_to :author, class_name: "User", inverse_of: :comment_threads, index: true#, autosave: true
   has_many :comments, dependent: :destroy#, autosave: true# Use destroy to envoke callback on the top-level comments TODO async
@@ -37,6 +39,9 @@ class CommentThread < Content
   mapping do
     indexes :title, type: :string, analyzer: :snowball, boost: 5.0, stored: true, term_vector: :with_positions_offsets
     indexes :body, type: :string, analyzer: :snowball, stored: true, term_vector: :with_positions_offsets
+    
+    indexes :comments_text_dummy, type: :string, analyzer: :snowball, stored: true, term_vector: :with_positions_offsets
+    
     indexes :tags_in_text, type: :string, as: 'tags_array', index: :analyzed
     indexes :tags_array, type: :string, as: 'tags_array', index: :not_analyzed, included_in_all: false
     indexes :created_at, type: :date, included_in_all: false
@@ -50,18 +55,26 @@ class CommentThread < Content
     indexes :commentable_id, type: :string, index: :not_analyzed, included_in_all: false
     indexes :author_id, type: :string, as: 'author_id', index: :not_analyzed, included_in_all: false
     indexes :group_id, type: :integer, as: 'group_id', index: :not_analyzed, included_in_all: false
+
     indexes :comments do
-      indexes :body, :type => 'string', :analyzer => 'snowball'
-    end
+      indexes :body, :type => 'string', :analyzer => 'snowball', store: true
+    end   
+
+    #indexes :comments, :as => Comment.where(:comment_thread_id => self._id).map{|c| c.body}.join("|")
     #indexes :comments, :as => comments.map{|c| c.body}.join('|'), :analyzer => 'snowball'
-
     #indexes :pinned, type: :boolean, as: 'pinned', index: :not_analyzed, included_in_all: false
-  end
 
-  attr_accessible :title, :body, :course_id, :commentable_id, :anonymous, :anonymous_to_peers, :closed
+    #indexes :comments,type: 'object', properties: 
+    #{
+    # body: { type: 'string', analyzer: 'snowball' }
+    #}
 
-  validates_presence_of :title
-  validates_presence_of :body
+ end
+
+ attr_accessible :title, :body, :comments_text_dummy, :course_id, :commentable_id, :anonymous, :anonymous_to_peers, :closed
+
+ validates_presence_of :title
+ validates_presence_of :body
   validates_presence_of :course_id # do we really need this?
   validates_presence_of :commentable_id
   validates_presence_of :author, autosave: false
@@ -119,12 +132,12 @@ class CommentThread < Content
     search.filter(:term, course_id: params["course_id"]) if params["course_id"]
     
     if params["group_id"]
-      
+
       search.filter :or, [
         {:not => {:exists => {:field => :group_id}}},
-          {:term => {:group_id => params["group_id"]}}
+        {:term => {:group_id => params["group_id"]}}
 
-        ]
+      ]
     end
     
     search.sort {|sort| sort.by sort_key, sort_order} if sort_key && sort_order #TODO should have search option 'auto sort or sth'
@@ -178,15 +191,15 @@ class CommentThread < Content
 
   def to_hash(params={})
     doc = as_document.slice(*%w[title body course_id anonymous anonymous_to_peers commentable_id created_at updated_at at_position_list closed])
-                     .merge("id" => _id, "user_id" => author_id,
-                            "username" => author.username,
-                            "votes" => votes.slice(*%w[count up_count down_count point]),
-                            "abuse_flaggers" => abuse_flaggers,
-                            "tags" => tags_array,
-                            "type" => "thread",
-                            "group_id" => group_id,
-                            "pinned" => pinned?,
-                            "endorsed" => endorsed?)
+    .merge("id" => _id, "user_id" => author_id,
+      "username" => author.username,
+      "votes" => votes.slice(*%w[count up_count down_count point]),
+      "abuse_flaggers" => abuse_flaggers,
+      "tags" => tags_array,
+      "type" => "thread",
+      "group_id" => group_id,
+      "pinned" => pinned?,
+      "endorsed" => endorsed?)
 
     if params[:recursive]
       doc = doc.merge("children" => root_comments.map{|c| c.to_hash(recursive: true)})
@@ -208,9 +221,9 @@ class CommentThread < Content
       #   unread count
       if last_read_time
         unread_count = self.comments.where(
-            :updated_at => {:$gte => last_read_time},
-            :author_id => {:$ne => params[:user_id]},
-        ).count
+          :updated_at => {:$gte => last_read_time},
+          :author_id => {:$ne => params[:user_id]},
+          ).count
         read = last_read_time >= self.updated_at
       else
         unread_count = self.comments.where(:author_id => {:$ne => params[:user_id]}).count
@@ -223,8 +236,8 @@ class CommentThread < Content
     end
 
     doc = doc.merge("unread_comments_count" => unread_count)
-             .merge("read" => read)
-             .merge("comments_count" => comments_count)
+    .merge("read" => read)
+    .merge("comments_count" => comments_count)
 
     doc
 
@@ -243,7 +256,7 @@ class CommentThread < Content
     tire.update_index
   end
   
-private
+  private
 
   RE_HEADCHAR = /[a-z0-9]/
   RE_ENDONLYCHAR = /\+/

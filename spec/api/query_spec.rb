@@ -4,8 +4,9 @@ describe "app" do
 	describe "thread search" do
 		describe "GET /api/v1/search/threads" do
 			it "returns thread with query match" do
-				user = User.find 1
-				if user.nil?
+				begin
+					user = User.find 1
+				rescue
 					user = create_test_user(1)
 				end
 
@@ -13,7 +14,8 @@ describe "app" do
 
 				random_string = (0...8).map{ ('a'..'z').to_a[rand(26)] }.join
 
-				thread = CommentThread.new(title: "Test title", body: random_string, course_id: "1", commentable_id: commentable.id)
+				#thread = CommentThread.new(title: "Test title", body: random_string, course_id: "1", commentable_id: commentable.id)
+				thread = CommentThread.new(body: "Test title", comments_text_dummy: random_string, title: "title", course_id: "1", commentable_id: commentable.id)
 				thread.author = user
 				thread.save!
 
@@ -24,7 +26,6 @@ describe "app" do
 				threads = parse(last_response.body)['collection']
 				threads.select{|t| t["id"].to_s == thread.id.to_s}.first.should_not be_nil
 			end
-
 		end
 	end
 
@@ -38,8 +39,9 @@ describe "app" do
 				commentable = Commentable.new("question_1")
 
 				random_string = (0...8).map{ ('a'..'z').to_a[rand(26)] }.join
+				random_string = "tepid"
 
-				thread = CommentThread.new(title: "Test title", body: "elephant otter", course_id: "1", commentable_id: commentable.id)
+				thread = CommentThread.new(title: "Test title", body: "elephant otter", course_id: "1", commentable_id: commentable.id, comments_text_dummy: "tepid")
 				thread.author = user
 				thread.save!
 
