@@ -265,4 +265,29 @@ helpers do
 
   end
 
+  def user_course_stats user_id
+    #get the status for a user-course
+    #example usage 
+    #http://localhost:4567/api/v1/users/322424/stats?course_id=BerkeleyX/CS188/fa12&api_key=PUT_YOUR_API_KEY_HERE
+    
+    thread_count = CommentThread.where(:author_id => user_id).where(:course_id => params["course_id"]).count
+    comment_count = Comment.where(:author_id => user_id).where(:course_id => params["course_id"]).count
+
+    #argh, subscriptions don't have a course_id so we have to find the ids then count the ones that are for
+    #this course
+
+    all_subscriptions = Subscription.where(:subscriber_id => user_id)
+    thread_ids = all_subscriptions.collect{|s| s.source_id}
+    subscription_count = CommentThread.where(:id.in => thread_ids).where(:course_id => params["course_id"]).count
+
+    answer = {}
+
+    answer["thread_count"] = thread_count
+    answer["comment_count"] = comment_count
+    answer["subscription_count"] = subscription_count
+
+    answer
+
+  end
+
 end

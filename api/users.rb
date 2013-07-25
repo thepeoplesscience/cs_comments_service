@@ -14,6 +14,10 @@ get "#{APIPREFIX}/users/:user_id" do |user_id|
   user.to_hash(complete: bool_complete, course_id: params["course_id"]).to_json
 end
 
+get "#{APIPREFIX}/users/:user_id/stats" do |user_id|
+  user_course_stats(user_id).to_json
+end
+
 get "#{APIPREFIX}/users/:user_id/active_threads" do |user_id|
   return {}.to_json if not params["course_id"]
 
