@@ -398,7 +398,7 @@ describe "app" do
 
       context "response pagination" do
 
-        def setup_paginated_threads
+        before(:each) do
           User.all.delete
           Content.all.delete
           @user = create_test_user(999)
@@ -420,8 +420,6 @@ describe "app" do
             end
           end
         end
-
-        before(:each) { setup_paginated_threads }
 
         def thread_result(id, params)
           get "/api/v1/threads/#{id}", params
