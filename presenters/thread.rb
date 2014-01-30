@@ -37,7 +37,8 @@ class ThreadPresenter
         all_response_ids = responses.select({"_id" => 1}).to_a.map{|doc| doc["_id"] }
         response_ids = (resp_limit.nil? ? all_response_ids[resp_skip..-1] : (all_response_ids[resp_skip,resp_limit])) || []
         # now use the odm to fetch the desired responses and their comments
-        content = Content.any_of({"parent_id" => {"$in" => response_ids}}, {"_id" => {"$in" => response_ids}}).order_by({"sk" => 1})
+        content = Content.where({"parent_id" => {"$in" => response_ids}}).to_a + Content.where({"_id" => {"$in" => response_ids}}).to_a
+        content.sort!{|a,b| a.sk <=> b.sk }
         response_total = all_response_ids.length
       else
         content = Content.where({"comment_thread_id" => @thread._id}).order_by({"sk"=> 1})
