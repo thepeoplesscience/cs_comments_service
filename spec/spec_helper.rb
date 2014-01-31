@@ -177,7 +177,7 @@ end
 
 # this method is used to test results produced using the helper function handle_threads_query
 # which is used in multiple areas of the API
-def check_thread_result(user, thread, json_response, check_comments=false, is_search=false)
+def check_thread_result(user, thread, json_response, is_search=false)
   expected_keys = %w(id title body course_id commentable_id created_at updated_at)
   expected_keys += %w(anonymous anonymous_to_peers at_position_list closed user_id)
   expected_keys += %w(username votes abuse_flaggers tags type group_id pinned)
@@ -185,9 +185,8 @@ def check_thread_result(user, thread, json_response, check_comments=false, is_se
   if is_search
     expected_keys += %w(highlighted_body highlighted_title)
   end
-  # the "children" key is not always present - depends on the invocation + test use case.
-  # exclude it from this check - if check_comments is set, we'll assert against it later
-  actual_keys = json_response.keys - ["children"]
+  # these keys are checked separately, when desired, using check_thread_response_paging.
+  actual_keys = json_response.keys - ["children", "resp_skip", "resp_limit", "resp_total"]
   actual_keys.sort.should == expected_keys.sort
 
   json_response["title"].should == thread.title
@@ -213,20 +212,6 @@ def check_thread_result(user, thread, json_response, check_comments=false, is_se
   json_response["group_id"].should == thread.group_id
   json_response["pinned"].should == thread.pinned?
   json_response["endorsed"].should == thread.endorsed?
-  if check_comments
-    # warning - this only checks top-level comments and may not handle all possible sorting scenarios
-    # proper composition / ordering of the children is currently covered in models/comment_thread_spec. 
-    # it also does not check for author-only results (e.g. user active threads view)
-    # author-only is covered by a test in api/user_spec.
-    root_comments = thread.root_comments.sort(_id:1).to_a
-    json_response["children"].should_not be_nil
-    json_response["children"].length.should == root_comments.length
-    json_response["children"].each_with_index { |v, i| 
-      v["body"].should == root_comments[i].body
-      v["user_id"].should == root_comments[i].author_id
-      v["username"].should == root_comments[i].author_username
-    }
-  end
   json_response["comments_count"].should == thread.comments.length
 
   if user.nil?
@@ -252,6 +237,38 @@ def check_thread_result(user, thread, json_response, check_comments=false, is_se
   end
 end
 
+
+def check_thread_response_paging(thread, json_response, resp_skip=0, resp_limit=nil)
+  all_responses = thread.root_comments.sort({"sk" => 1}).to_a
+  total_responses = all_responses.length
+  json_response["resp_total"].should == total_responses
+  expected_response_slice = (resp_skip..(resp_limit.nil? ? total_responses : [total_responses, resp_skip + resp_limit].min)-1).to_a
+  expected_response_ids = expected_response_slice.map{|i| all_responses[i]["_id"].to_s }
+  actual_response_ids = []
+  json_response["children"].each_with_index do |response, i|
+    actual_response_ids << response["id"]
+    response["body"].should == all_responses[expected_response_slice[i]].body
+    response["user_id"].should == all_responses[expected_response_slice[i]].author_id
+    response["username"].should == all_responses[expected_response_slice[i]].author_username
+    comments = Comment.where({"parent_id" => response["id"]}).sort({"sk" => 1}).to_a
+    expected_comment_ids = comments.map{|doc| doc["_id"].to_s }
+    actual_comment_ids = []
+    response["children"].each_with_index do |comment, j|
+      actual_comment_ids << comment["id"]
+      comment["body"].should == comments[j].body
+      comment["user_id"].should == comments[j].author_id
+      comment["username"].should == comments[j].author_username
+    end
+    actual_comment_ids.should == expected_comment_ids
+  end
+  actual_response_ids.should == expected_response_ids
+  json_response["resp_skip"].to_i.should == resp_skip
+  if resp_limit.nil?
+    json_response["resp_limit"].should be_nil
+  else
+    json_response["resp_limit"].to_i.should == resp_limit
+  end
+end
 
 # general purpose factory helpers
 def make_thread(author, text, course_id, commentable_id)

@@ -4,6 +4,7 @@ require 'unicode_shared_examples'
 describe "app" do
   describe "comment threads" do
 
+
     describe "GET /api/v1/threads" do
 
       before(:each) { setup_10_threads }
@@ -307,8 +308,8 @@ describe "app" do
         course_id = "unicode_course"
         thread = make_thread(User.first, text, course_id, "unicode_commentable")
         make_comment(User.first, thread, text)
-        result = thread_result(course_id: course_id, recursive: true).first
-        check_thread_result(nil, thread, result, true)
+        result = thread_result(course_id: course_id).first
+        check_thread_result(nil, thread, result)
       end
 
       include_examples "unicode data"
@@ -370,7 +371,8 @@ describe "app" do
         thread = CommentThread.first
         get "/api/v1/threads/#{thread.id}", recursive: true
         last_response.should be_ok
-        check_thread_result(nil, thread, parse(last_response.body), true)
+        check_thread_result(nil, thread, parse(last_response.body))
+        check_thread_response_paging(thread, parse(last_response.body))
       end
 
       it "returns 400 when the thread does not exist" do
@@ -388,11 +390,74 @@ describe "app" do
         get "/api/v1/threads/#{thread.id}", recursive: true
         last_response.should be_ok
         result = parse last_response.body
-        check_thread_result(nil, thread, result, true)
+        check_thread_result(nil, thread, result)
+        check_thread_response_paging(thread, result)
       end
 
       include_examples "unicode data"
+
+      context "response pagination" do
+
+        before(:each) do
+          User.all.delete
+          Content.all.delete
+          @user = create_test_user(999)
+          @threads = {}
+          @comments = {}
+          [20,10,3,2,1,0].each do |n|
+            thread_key = "t#{n}"
+            thread = make_thread(@user, thread_key, DFLT_COURSE_ID, "pdq")
+            @threads[n] = thread
+            n.times do |i|
+              # generate n responses in this thread
+              comment_key = "#{thread_key} r#{i}"
+              comment = make_comment(@user, thread, comment_key)
+              i.times do |j|
+                subcomment_key = "#{comment_key} c#{j}"
+                subcomment = make_comment(@user, comment, subcomment_key)
+              end
+              @comments[comment_key] = comment
+            end
+          end
+        end
+
+        def thread_result(id, params)
+          get "/api/v1/threads/#{id}", params
+          last_response.should be_ok
+          parse(last_response.body)
+        end
+
+        it "returns all responses when no skip/limit params given" do
+          @threads.each do |n, thread|
+            res = thread_result thread.id, {}
+            check_thread_response_paging thread, res
+          end 
+        end
+
+        it "skips the specified number of responses" do
+          @threads.each do |n, thread|
+            res = thread_result thread.id, {:resp_skip => 1}
+            check_thread_response_paging thread, res, 1, nil
+          end 
+        end
+
+        it "limits the specified number of responses" do
+          @threads.each do |n, thread|
+            res = thread_result thread.id, {:resp_limit => 2}
+            check_thread_response_paging thread, res, 0, 2
+          end 
+        end
+
+        it "skips and limits responses" do
+          @threads.each do |n, thread|
+            res = thread_result thread.id, {:resp_skip => 3, :resp_limit => 5}
+            check_thread_response_paging thread, res, 3, 5
+          end 
+        end
+
+      end
     end
+
     describe "PUT /api/v1/threads/:thread_id" do
 
       before(:each) { init_without_subscriptions }
