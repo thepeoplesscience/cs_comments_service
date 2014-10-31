@@ -16,13 +16,9 @@ gem 'yajl-ruby'
 
 gem 'ampex'
 
-gem 'mongo'
-gem 'moped', "1.5.1"
 gem 'mongoid', "3.0.15"
-gem 'bson_ext'
+#gem 'moped', "1.5.1"
 
-gem 'delayed_job'
-gem 'delayed_job_mongoid', :git => 'https://github.com/dementrock/delayed_job_mongoid.git'
 
 gem "enumerize", "~>0.8.0"
 gem 'mongoid-tree', :git => 'https://github.com/dementrock/mongoid-tree.git'

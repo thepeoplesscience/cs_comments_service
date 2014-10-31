@@ -15,8 +15,6 @@ set :run, false
 set :raise_errors, true
 set :logging, false
 
-Delayed::Worker.delay_jobs = false
-
 def app
   Sinatra::Application
 end
@@ -74,11 +72,11 @@ end
 
 def init_without_subscriptions
 
-  [Comment, CommentThread, User, Notification, Subscription, Activity, Delayed::Backend::Mongoid::Job].each(&:delete_all).each(&:remove_indexes).each(&:create_indexes)
+  [Comment, CommentThread, User, Notification, Subscription, Activity].each(&:delete_all).each(&:remove_indexes).each(&:create_indexes)
   Content.mongo_session[:blocked_hash].drop
   delete_es_index
   create_es_index
-  
+
   commentable = Commentable.new("question_1")
 
   users = (1..10).map{|id| create_test_user(id)}
@@ -158,7 +156,7 @@ def init_without_subscriptions
 end
 
 def init_with_subscriptions
-  [Comment, CommentThread, User, Notification, Subscription, Activity, Delayed::Backend::Mongoid::Job].each(&:delete_all).each(&:remove_indexes).each(&:create_indexes)
+  [Comment, CommentThread, User, Notification, Subscription, Activity].each(&:delete_all).each(&:remove_indexes).each(&:create_indexes)
 
   delete_es_index
   create_es_index

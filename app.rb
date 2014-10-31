@@ -153,7 +153,7 @@ require './api/notifications'
 
 if RACK_ENV.to_s == "development"
   get "#{APIPREFIX}/clean" do
-    [Delayed::Backend::Mongoid::Job, Comment, CommentThread, User, Notification, Subscription, Activity].each(&:delete_all).each(&:remove_indexes).each(&:create_indexes)
+    [Comment, CommentThread, User, Notification, Subscription, Activity].each(&:delete_all).each(&:remove_indexes).each(&:create_indexes)
     {}.to_json
   end
 end
