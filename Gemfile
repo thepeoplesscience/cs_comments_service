@@ -16,16 +16,14 @@ gem 'yajl-ruby'
 
 gem 'ampex'
 
-gem 'mongoid', "3.0.15"
-#gem 'moped', "1.5.1"
-
+gem 'mongoid', "4.0.0"
 
 gem "enumerize", "~>0.8.0"
 gem 'mongoid-tree', :git => 'https://github.com/dementrock/mongoid-tree.git'
 gem 'voteable_mongo', :git => 'https://github.com/dementrock/voteable_mongo.git'
 gem 'mongoid_magic_counter_cache', :git => 'https://github.com/dementrock/mongoid-magic-counter-cache.git'
 
-gem 'kaminari', :require => 'kaminari/sinatra', :git => 'https://github.com/dementrock/kaminari.git'
+gem 'kaminari', :require => 'kaminari/sinatra' #, :git => 'https://github.com/dementrock/kaminari.git'
 
 gem 'faker'
 gem 'will_paginate_mongoid'
