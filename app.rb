@@ -112,12 +112,6 @@ if ENV["ENABLE_IDMAP_LOGGING"]
 
 end
 
-# Enable the identity map. The middleware ensures that the identity map is
-# cleared for every request.
-Mongoid.identity_map_enabled = true
-use Rack::Mongoid::Middleware::IdentityMap
-
-
 # use yajl implementation for to_json.
 # https://github.com/brianmario/yajl-ruby#json-gem-compatibility-api
 #
@@ -126,17 +120,23 @@ use Rack::Mongoid::Middleware::IdentityMap
 # https://github.com/rails/rails/issues/3727
 require 'yajl/json_gem'
 
+# Mongoid upgrade note: This ends up overwriting the
+# Moped::BSON::ObjectId class, rather than simply patching its
+# to_json.  Need to figure out how to just patch the to_json.  Note
+# that when the following code is uncommented, we get errors about the
+# `legal` method not existing on the Moped::BSON::ObjectId class.
+#
 # patch json serialization of ObjectIds to work properly with yajl.
 # See https://groups.google.com/forum/#!topic/mongoid/MaXFVw7D_4s
-module Moped
-  module BSON
-    class ObjectId
-      def to_json
-        self.to_s.to_json
-      end
-    end
-  end
-end
+# module Moped
+#   module BSON
+#     class ObjectId
+#       def to_json
+#         self.to_s.to_json
+#       end
+#     end
+#   end
+# end
 
 
 # these files must be required in order
@@ -170,7 +170,7 @@ error ArgumentError do
   error 400, [env['sinatra.error'].message].to_json
 end
 
-CommentService.blocked_hashes = Content.mongo_session[:blocked_hash].find.select(hash: 1).each.map {|d| d["hash"]}
+CommentService.blocked_hashes = Content.mongo_session[:blocked_hash].find.select(hash: 1).map {|d| d["hash"]}
 
 def get_db_is_master
   Mongoid::Sessions.default.command(isMaster: 1)

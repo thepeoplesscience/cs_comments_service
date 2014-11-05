@@ -1,23 +1,9 @@
 GIT
-  remote: https://github.com/dementrock/mongoid-magic-counter-cache.git
-  revision: 28bc5e617cab19187b323e7d97d49fe73a7de68a
-  specs:
-    mongoid_magic_counter_cache (0.1.1)
-      mongoid (>= 3.0)
-      rake
-
-GIT
   remote: https://github.com/dementrock/mongoid-tree.git
   revision: 5aa7a4ee16cd90dbbcac3ad702446d2119e971df
   specs:
     mongoid-tree (1.0.0)
       mongoid (>= 3.0, <= 4.0)
-
-GIT
-  remote: https://github.com/dementrock/voteable_mongo.git
-  revision: 538e86856daa1c180ba80b7c6f2805e531ba420c
-  specs:
-    voteable_mongo (0.9.3)
 
 GIT
   remote: https://github.com/rack/rack-contrib.git
@@ -62,8 +48,6 @@ GEM
     hashr (0.0.22)
     i18n (0.6.11)
     json (1.8.1)
-    kaminari (0.11.0)
-      kaminari
     kgio (2.7.4)
     listen (0.5.0)
     method_source (0.8)
@@ -74,6 +58,9 @@ GEM
       moped (~> 2.0.0)
       origin (~> 2.1)
       tzinfo (>= 0.3.37)
+    mongoid_magic_counter_cache (1.1.0)
+      mongoid
+      rake
     moped (2.0.1)
       bson (~> 2.2)
       connection_pool (~> 2.0)
@@ -86,6 +73,8 @@ GEM
     nokogiri (1.5.5)
     optionable (0.2.0)
     origin (2.1.1)
+    protected_attributes (1.0.8)
+      activemodel (>= 4.0.1, < 5.0)
     pry (0.9.10)
       coderay (~> 1.0.5)
       method_source (~> 0.8)
@@ -103,6 +92,8 @@ GEM
     rdiscount (1.6.8)
     rest-client (1.6.7)
       mime-types (>= 1.16)
+    rs_voteable_mongo (1.0.2)
+      mongoid (>= 3.0, < 5.0)
     rspec (2.11.0)
       rspec-core (~> 2.11.0)
       rspec-expectations (~> 2.11.0)
@@ -158,13 +149,13 @@ DEPENDENCIES
   guard
   guard-unicorn
   i18n
-  kaminari
   mongoid (= 4.0.0)
   mongoid-tree!
-  mongoid_magic_counter_cache!
+  mongoid_magic_counter_cache
   newrelic_moped
   newrelic_rpm
   nokogiri
+  protected_attributes
   pry
   pry-nav
   rack-contrib!
@@ -173,12 +164,12 @@ DEPENDENCIES
   rake
   rdiscount
   rest-client
+  rs_voteable_mongo
   rspec
   simplecov
   sinatra
   tire (= 0.6.2)
   tire-contrib
   unicorn
-  voteable_mongo!
   will_paginate_mongoid
   yajl-ruby

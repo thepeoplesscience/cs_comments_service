@@ -2,6 +2,7 @@ require_relative 'content'
 
 class Comment < Content
 
+  include ActiveModel::MassAssignmentSecurity
   include Mongoid::Tree
   include Mongoid::Timestamps
   include Mongoid::MagicCounterCache
@@ -47,7 +48,7 @@ class Comment < Content
   belongs_to :comment_thread, index: true
   belongs_to :author, class_name: "User", index: true
 
-  attr_accessible :body, :course_id, :anonymous, :anonymous_to_peers, :endorsed, :endorsement
+  # attr_accessible :body, :course_id, :anonymous, :anonymous_to_peers, :endorsed, :endorsement
 
   validates_presence_of :comment_thread, autosave: false
   validates_presence_of :body

@@ -455,12 +455,6 @@ describe "app" do
         thread = CommentThread.first
         expected_username = thread.author.username
 
-        # We need to clear the IdentityMap after getting the expected data to
-        # ensure that this spec fails when it should. If we don't do this, then
-        # in the cases where the User is fetched without its username, the spec
-        # won't fail because the User will already be in the identity map. 
-        Mongoid::IdentityMap.clear
-
         get "/api/v1/threads/#{thread.id}", {:user_id => thread.author_id, :mark_as_read => true}
         last_response.should be_ok
         response_thread = parse last_response.body

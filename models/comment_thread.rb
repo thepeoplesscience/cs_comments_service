@@ -4,6 +4,7 @@ require_relative 'content'
 
 class CommentThread < Content
 
+  include ActiveModel::MassAssignmentSecurity
   include Mongoid::Timestamps
   extend Enumerize
 
@@ -53,7 +54,7 @@ class CommentThread < Content
   has_many :comments, dependent: :destroy#, autosave: true# Use destroy to envoke callback on the top-level comments TODO async
   has_many :activities, autosave: true
 
-  attr_accessible :title, :body, :course_id, :commentable_id, :anonymous, :anonymous_to_peers, :closed, :thread_type
+  # attr_accessible :title, :body, :course_id, :commentable_id, :anonymous, :anonymous_to_peers, :closed, :thread_type
 
   validates_presence_of :thread_type
   validates_presence_of :title

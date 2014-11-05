@@ -13,6 +13,7 @@ gem 'sinatra'
 
 gem 'yajl-ruby'
 
+gem 'protected_attributes'
 
 gem 'ampex'
 
@@ -20,13 +21,11 @@ gem 'mongoid', "4.0.0"
 
 gem "enumerize", "~>0.8.0"
 gem 'mongoid-tree', :git => 'https://github.com/dementrock/mongoid-tree.git'
-gem 'voteable_mongo', :git => 'https://github.com/dementrock/voteable_mongo.git'
-gem 'mongoid_magic_counter_cache', :git => 'https://github.com/dementrock/mongoid-magic-counter-cache.git'
-
-gem 'kaminari', :require => 'kaminari/sinatra' #, :git => 'https://github.com/dementrock/kaminari.git'
+gem 'rs_voteable_mongo'
+gem 'mongoid_magic_counter_cache'
+gem 'will_paginate_mongoid'
 
 gem 'faker'
-gem 'will_paginate_mongoid'
 gem 'rdiscount'
 gem 'nokogiri'
 

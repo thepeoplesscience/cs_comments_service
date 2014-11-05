@@ -1,11 +1,12 @@
 class Notification
+  include ActiveModel::MassAssignmentSecurity
   include Mongoid::Document
   include Mongoid::Timestamps
 
   field :notification_type, type: String
   field :info, type: Hash
 
-  attr_accessible :notification_type, :info
+  # attr_accessible :notification_type, :info
 
   validates_presence_of :notification_type
   validates_presence_of :info
